@@ -120,7 +120,11 @@ func (c *Cache) GetFull(key interface{}, now time.Time) (interface{}, bool) {
 	if !existing {
 		return nil, false
 	}
-	asCI := item.(*cacheItem)
+	asCI, ok := item.(*cacheItem)
+	if !ok {
+		c.Remove(key)
+		return nil, false
+	}
 	if asCI.ttlAt.IsZero() || now.Before(asCI.ttlAt) {
 		return asCI.val, true
 	}
@@ -133,13 +137,24 @@ func (c *Cache) GetFull(key interface{}, now time.Time) (interface{}, bool) {
 	if !existing {
 		return nil, false
 	}
-	asCI = item.(*cacheItem)
+	asCI, ok = item.(*cacheItem)
+	if !ok {
+		c.LRUCache.Remove(key)
+		return nil, false
+	}
 	if asCI.ttlAt.IsZero() || now.Before(asCI.ttlAt) {
 		return asCI.val, true
 	}
 	c.LRUCache.Remove(key)
 	c.onEviction(key, asCI.val)
 	return nil, false
+}
+
+// Remove an item from the cache
+func (c *Cache) Remove(key interface{}) bool {
+	c.lruMu.Lock()
+	defer c.lruMu.Unlock()
+	return c.LRUCache.Remove(key)
 }
 
 // PeekFull is like an LRU Peek (does not adjust the LRU), but at an explicit time
@@ -155,7 +170,11 @@ func (c *Cache) PeekFull(key interface{}, now time.Time) (interface{}, bool) {
 	if !existing {
 		return nil, false
 	}
-	asCI := item.(*cacheItem)
+	asCI, ok := item.(*cacheItem)
+	if !ok {
+		c.Remove(key)
+		return nil, false
+	}
 	if asCI.ttlAt.IsZero() || now.Before(asCI.ttlAt) {
 		return asCI.val, true
 	}
@@ -168,7 +187,11 @@ func (c *Cache) PeekFull(key interface{}, now time.Time) (interface{}, bool) {
 	if !existing {
 		return nil, false
 	}
-	asCI = item.(*cacheItem)
+	asCI, ok = item.(*cacheItem)
+	if !ok {
+		c.LRUCache.Remove(key)
+		return nil, false
+	}
 	if asCI.ttlAt.IsZero() || now.Before(asCI.ttlAt) {
 		return asCI.val, true
 	}
