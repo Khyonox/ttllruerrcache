@@ -19,6 +19,7 @@ type cacheItem struct {
 	ttlAt time.Time
 }
 
+// Cache can cache items with both a TTL and a LRU
 type Cache struct {
 	// This does not need locking.  Just use simplelru.LRU (rather than the locked variant)
 	// You can leave this empty and use the Size and OnEviction parameters and Cache will make one for you
@@ -31,14 +32,17 @@ type Cache struct {
 	lruMu sync.RWMutex
 }
 
+// Set key to value in the cache
 func (c *Cache) Set(key interface{}, value interface{}) {
 	c.SetFull(key, value, c.now(), c.ItemTTL)
 }
 
+// Get a value from the cache if it is still valid.  Returns the value and true/false if the value was in the cache
 func (c *Cache) Get(key interface{}) (interface{}, bool) {
 	return c.GetFull(key, c.now())
 }
 
+// Clean removes old TTL items from the cache
 func (c *Cache) Clean() {
 	c.CleanFull(c.now())
 }
@@ -70,6 +74,7 @@ func (c *Cache) getTTLAt(now time.Time, itemTTL time.Duration) time.Time {
 	return now.Add(itemTTL)
 }
 
+// CleanFull is like clean, but at an explicit time
 func (c *Cache) CleanFull(now time.Time) {
 	c.lruMu.RLock()
 	if c.LRUCache == nil {
@@ -84,6 +89,7 @@ func (c *Cache) CleanFull(now time.Time) {
 	}
 }
 
+// SetFull is like Set, but with an explicit time and TTL
 func (c *Cache) SetFull(key interface{}, val interface{}, now time.Time, itemTTL time.Duration) {
 	// Key is not valid in cache, try to make it
 	c.lruMu.Lock()
@@ -101,6 +107,7 @@ func (c *Cache) SetFull(key interface{}, val interface{}, now time.Time, itemTTL
 	c.LRUCache.Add(key, &ci)
 }
 
+// GetFull is like Get, but with an explicit time
 func (c *Cache) GetFull(key interface{}, now time.Time) (interface{}, bool) {
 	// Key is not valid in cache, try to make it
 	c.lruMu.RLock()
@@ -135,6 +142,7 @@ func (c *Cache) GetFull(key interface{}, now time.Time) (interface{}, bool) {
 	return nil, false
 }
 
+// PeekFull is like an LRU Peek (does not adjust the LRU), but at an explicit time
 func (c *Cache) PeekFull(key interface{}, now time.Time) (interface{}, bool) {
 	// Key is not valid in cache, try to make it
 	c.lruMu.RLock()
