@@ -1,6 +1,7 @@
 package ttllruerrcache
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -26,4 +27,14 @@ func TestCache(t *testing.T) {
 
 	val, _ = c.GetFull("name", now)
 	require.Nil(t, val)
+}
+
+func ExampleCache() {
+	c := Cache{
+		ItemTTL: time.Second * 60,
+	}
+	c.Set("hello", "world")
+	value, exists := c.Get("hello")
+	fmt.Println(value, exists)
+	// Output: world true
 }
