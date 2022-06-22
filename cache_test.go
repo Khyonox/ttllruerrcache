@@ -38,3 +38,11 @@ func ExampleCache() {
 	fmt.Println(value, exists)
 	// Output: world true
 }
+
+func ExampleCache_Defaults() {
+	var c Cache
+	c.Set("hello", "world")
+	value, exists := c.Get("hello")
+	fmt.Println(value, exists)
+	// Output: world true
+}
