@@ -19,15 +19,20 @@ type cacheItem struct {
 	ttlAt time.Time
 }
 
-// Cache can cache items with both a TTL and a LRU
+// Cache can cache items with both a TTL and a LRU.  Items do not clear explicitly, but the TTL nature should mitigate
+// that.
 type Cache struct {
 	// This does not need locking.  Just use simplelru.LRU (rather than the locked variant)
 	// You can leave this empty and use the Size and OnEviction parameters and Cache will make one for you
-	LRUCache   simplelru.LRUCache
-	ItemTTL    time.Duration
-	Size       int
+	LRUCache simplelru.LRUCache
+	// By default items do not TTL
+	ItemTTL time.Duration
+	// The size to make the LRUCache object with, if one is not set by default
+	Size int
+	// The callback for evicted, or TTL, items
 	OnEviction func(key interface{}, value interface{})
-	Now        func() time.Time
+	// Should return the current time
+	Now func() time.Time
 
 	lruMu sync.RWMutex
 }
