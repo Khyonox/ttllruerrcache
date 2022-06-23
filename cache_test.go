@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCache_Remove(t *testing.T) {
+	var c Cache
+	require.False(t, c.Remove(""))
+}
+
 func TestCache(t *testing.T) {
 	var c Cache
 	_, exists := c.Get("hello")

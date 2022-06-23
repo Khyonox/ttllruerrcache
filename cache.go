@@ -94,6 +94,12 @@ func (c *Cache) CleanFull(now time.Time) {
 	}
 }
 
+func (c *Cache) verifyCacheExistsNoLock() {
+	if c.LRUCache == nil {
+		c.LRUCache = mustLRU(simplelru.NewLRU(c.size(), c.onEviction))
+	}
+}
+
 // SetFull is like Set, but with an explicit time and TTL.  If itemTTL is zero, the item does not
 // TTL.
 func (c *Cache) SetFull(key interface{}, val interface{}, now time.Time, itemTTL time.Duration) {
@@ -107,9 +113,7 @@ func (c *Cache) SetFull(key interface{}, val interface{}, now time.Time, itemTTL
 	if itemTTL < 0 {
 		return
 	}
-	if c.LRUCache == nil {
-		c.LRUCache = mustLRU(simplelru.NewLRU(c.size(), c.onEviction))
-	}
+	c.verifyCacheExistsNoLock()
 	c.LRUCache.Add(key, &ci)
 }
 
@@ -160,6 +164,9 @@ func (c *Cache) GetFull(key interface{}, now time.Time) (interface{}, bool) {
 func (c *Cache) Remove(key interface{}) bool {
 	c.lruMu.Lock()
 	defer c.lruMu.Unlock()
+	if c.LRUCache == nil {
+		return false
+	}
 	return c.LRUCache.Remove(key)
 }
 
