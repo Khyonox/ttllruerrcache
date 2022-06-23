@@ -25,7 +25,7 @@ type Cache struct {
 	// This does not need locking.  Just use simplelru.LRU (rather than the locked variant)
 	// You can leave this empty and use the Size and OnEviction parameters and Cache will make one for you
 	LRUCache simplelru.LRUCache
-	// By default items do not TTL
+	// By default items do not TTL (zero TTL means items do not expire, but just LRU)
 	ItemTTL time.Duration
 	// The size to make the LRUCache object with, if one is not set by default
 	Size int
@@ -66,7 +66,7 @@ func (c *Cache) now() time.Time {
 }
 
 func (c *Cache) size() int {
-	if c.Size == 0 {
+	if c.Size <= 0 {
 		return 1024
 	}
 	return c.Size
@@ -94,7 +94,8 @@ func (c *Cache) CleanFull(now time.Time) {
 	}
 }
 
-// SetFull is like Set, but with an explicit time and TTL
+// SetFull is like Set, but with an explicit time and TTL.  If itemTTL is zero, the item does not
+// TTL.
 func (c *Cache) SetFull(key interface{}, val interface{}, now time.Time, itemTTL time.Duration) {
 	// Key is not valid in cache, try to make it
 	c.lruMu.Lock()

@@ -39,7 +39,7 @@ func ExampleCache() {
 	// Output: world true
 }
 
-func ExampleCache_Defaults() {
+func ExampleCache_defaults() {
 	var c Cache
 	c.Set("hello", "world")
 	value, exists := c.Get("hello")
